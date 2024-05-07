@@ -1,0 +1,207 @@
+---
+title: "Basic_popgen_stats"
+author: "Dylan Cohen"
+date: "5/6/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r library}
+library(poppr)
+library(hierfstat)
+library(gaston)
+library(vcfR)
+library(reshape2)
+library(pegas)
+library(cowplot)
+library(adegenet)
+library(plotly)
+library(directlabels)
+library(ggthemes)
+library(dartR)
+```
+
+#Set working directory to where the vcf files are found
+
+```{r}
+setwd("/Users/dcohen/Desktop/R_Stuff")
+```
+
+
+#Here we read in the  VCF files and convert them to genlight object
+```{r read in vcf with vcfR}
+vcf<-read.vcfR("Tharpii_only.vcf")
+
+vcf_fug<-read.vcfR("Fugatei_only.vcf") 
+vcf_long<-read.vcfR("Longiflora_only.vcf") 
+vcf_all<-read.vcfR("All_species.vcf") 
+
+tharp_gl <- vcfR2genlight(vcf)
+fug_gl<-vcfR2genind(vcf_fug)
+long_gl<-vcfR2genind(vcf_long)
+All_gl<-vcfR2genind(vcf_all)
+```
+
+#Assign each individual to a population
+```{r -create popmap}
+pop(tharp_gl)<- as.factor(c("BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN","CAP","CAP","CAP","CAP",	"CAP","CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP","CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP","CPC",	"CPC",
+                            "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                            "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                            "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                            "CPC",	"CPC",	"CPC",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",
+                             "Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",
+                             "Tex",	"Tex",	"Tex",	"Tex",	"Tex"))
+
+```
+
+```{r - VCF files for just fugatei}
+pop(fug_gl)<- as.factor(c("BOS" ,"BOS", "BOS", "BOS" ,"BOS", "BOS", "BOS",
+                             "BOS" ,"BOS", "BOS", "FIF", "FIF", "FIF" ,"FIF",
+                             "FIF", "FIF" ,"FIF", "FIF", "FIF", "FIF" ,"SEV", 
+                             "SEV", "SEV", "SEV" , "SEV",  "SEV" , "SEV" , "SEV", 
+                             "SEV" , "SEV"))
+```
+
+```{r - VCF file for just longiflora}
+pop(long_gl)<-as.factor(c("AZO", "AZO", "AZO", "AZO", "AZO", "AZO" ,"AZO" ,"AZO", "AZO", "AZO",
+"BLA","BLA","BLA","BLA","BLA","BLA","BLA","BLA","DEL","DEL","DEL", "DEL", "DEL", "DEL", "DEL",  "DEL","DEL","DEL","ENG","ENG",  "ENG","ENG","ENG","ENG","ENG","ENG","ENG","ENG","OVI","OVI","OVI","OVI","OVI","OVI","OVI" ,"OVI","OVI","OVI","OVI","OVI","WOO","WOO","WOO","WOO" ,"WOO","WOO","WOO", "WOO"))
+```
+
+
+```{r - this is for VCF files with all 3 species}
+pop(All_gl)<- as.factor(c("Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp", "Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp", "Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp", "Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp",	"Tharp","Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei","Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",
+"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei",	"Fugatei","Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora","Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora","Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora","Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",
+"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora","Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora",	"Longiflora","Longiflora"))
+```
+                             
+```{r- compliance check to make sure file is useable for dartr}
+tharp_gl2 <- gl.compliance.check(tharp_gl)
+fug_gl2 <- gl.compliance.check(fug_gl)
+long_gl2 <- gl.compliance.check(long_gl)
+All_gl2 <- gl.compliance.check(All_gl)
+```
+
+                             
+```{r - generate observed heterzygosity per individual}
+gl.report.heterozygosity(tharp_gl2,method = 'ind')
+gl.report.heterozygosity(fug_gl2,method = 'ind')
+gl.report.heterozygosity(long_gl2,method = 'ind')
+gl.report.heterozygosity(All_gl2 ,method = 'ind')
+```
+
+#To build box plots copy and paste the output or save it to a CSV file in R, we only need the first column (names) and second column (observed heterzygozity) below is an example with just tharpii output
+
+```{r-Tharpii only boxplot}
+data3<-read.csv("tharp_pops.csv")
+data3$X <- factor(data3$X , levels=c("BEN", "RED", "CPC", "CAP","TEX"))
+boxplot(data3$exp~data3$X, data3 = data,  ylab="Expected He", xlab = "Population",cex.axis=1.5, cex.lab=1.5)
+```
+
+#To get inbreeding coefficient for each population (Tharpii only below) using hierfstat
+```{r-convert the vcf into genid object}
+
+tharp_gen<-vcfR2genind(vcf)
+
+#assign each individual to a population
+pop(tharp_gen)<- as.factor(c("BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",
+                             "BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"BEN",	"CPC",	"CPC",
+                             "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                             "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                             "CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",	"CPC",
+                             "CPC",	"CPC",	"CPC",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",	"CAP",
+                             "CAP",	"CAP",	"CAP",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",	"RED",
+                             "RED",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",
+                             "Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",	"Tex",
+                             "Tex",	"Tex",	"Tex",	"Tex",	"Tex"))	
+
+#Convert the genid object to a hierfstat object
+tharp_hfstat<-genind2hierfstat(tharp_gen)
+#Run basic stats using  hierfstat
+basicstat<-basic.stats(tharp_hfstat, diploid = TRUE, digits = 3)
+#move results into a data frame
+overall<-as.data.frame(basicstat$overall)
+#get the mean for each population
+Tharpii_Fis <-colMeans(basicstat$Fis,na.rm = T)
+#Displays mean Fis for each pop
+Tharpii_Fis 
+```
+
+#Next lets get pairwise Fst for all populations, we already have all three species as genlight dataframes and so all we need to do is plug them into the dartr function gl.fst
+```{r-pairwise Fst}
+# tharpii
+tharp_fst <- gl.fst.pop(tharp_gl)
+D_tharp <- as.dist(tharp_fst$Fsts, diag = FALSE, upper = FALSE)
+D_tharp
+
+# fugatei
+tf <- gl.fst.pop(fug_gl)
+D_fug <- as.dist(tf$Fsts, diag = FALSE, upper = FALSE)
+D_fug
+
+long_fst <- gl.fst.pop(long_gl)
+D_long <- as.dist(long_fst$Fsts, diag = FALSE, upper = FALSE)
+D_long 
+```
+#Isolation by distance plots - because fugatei and tharpii are sensitive species and I dont want to publicly post their locality information I will only do this for the common species longiflora
+
+```{r-isolation by distance plot}
+library(geodist)
+# load the population coordinates for longiflora
+list3 <- data.frame(longitude = c(-104.546147,
+                                  -105.48917,
+                                  -105.16436,
+                                  -107.144,
+                                  -105.912392,
+                                  -105.15552), 
+                    latitude = c(32.390842, 
+                                 32.04322,  
+                                 32.18425,
+                                 33.13,
+                                 32.747678,
+                                 32.54203),
+                    name= c('AZO', 
+                            'BLA', 
+                            'DEL',
+                            'ENG',
+                            'OVI',
+                            'WOO'))
+
+#Create a pairwise distance matrix
+distance_matrix3 <- geodist(list3, measure = 'geodesic' )/1000 
+colnames(distance_matrix3) <- list3$name
+rownames(distance_matrix3) <- list3$name
+Dgeo3 <- distance_matrix3
+Dgeo3 
+
+#plot Fst x distance and draw line of best fit
+plot(Dgeo3[lower.tri(Dgeo3)], D_long, xlab = "Euclidean distance (km)", ylab = "Population Pairwise Fst",  pch=20, cex=3, col="black", ylim =c(0, 0.15), xlim =c(0,275),cex.axis=1.5, cex.lab=1.5)
+abline(lm(D_long ~ Dgeo3[lower.tri(Dgeo3)]),col="purple", lwd =3)
+```
+
+
+
+                             
+                             
+
