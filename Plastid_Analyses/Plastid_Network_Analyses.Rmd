@@ -1,0 +1,82 @@
+---
+title: "Plastid_Network_Analyses"
+author: "Dylan Cohen"
+date: "5/8/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load required libraries}
+library(vcfR)
+library(poppr)
+library(ape)
+library(RColorBrewer)
+library("igraph")
+```
+
+```{r load each species vcf file}
+tharp.VCF <- read.vcfR("tharp.plastid.vcf")  # Tharpii
+fug.VCF <- read.vcfR("Fugatei.plastid.vcf")  #Fugatei
+long.VCF <- read.vcfR("Longiflora.plastid.vcf")  #Longiflora
+```
+
+```{r convert to genlight objects}
+gl.tharp <- vcfR2genlight(tharp.VCF)
+gl.fug <- vcfR2genlight(fug.VCF)
+gl.long <- vcfR2genlight(long.VCF)
+```
+
+```{r - load table with indviduals assigned to populations}
+pop.data <- read.table("meta.txt", sep = "\t", header = TRUE) # Tharpii
+pop.data2 <- read.table("meta2.txt", sep = "\t", header = TRUE) #Fugatei
+pop.data3 <- read.table("meta3.txt", sep = "\t", header = TRUE) #Longiflora
+
+all(colnames(tharp.VCF@gt)[-1] == pop.data$sample)
+all(colnames(fug.VCF@gt)[-1] == pop.data2$sample)
+all(colnames(long.VCF@gt)[-1] == pop.data3$sample)
+
+pop(gl.tharp) <- pop.data$pop
+pop(gl.fug) <- pop.data2$pop
+pop(gl.long) <- pop.data3$pop
+```
+
+```{r make all species diploid}
+ploidy(gl.tharp) <- 2
+ploidy(gl.fug) <- 2
+ploidy(gl.long) <- 2
+```
+
+```{r}
+library(igraph)
+dist.test <- bitwise.dist(gl.tharp)
+dist.test2 <- bitwise.dist(gl.fug)
+dist.test3 <- bitwise.dist(gl.long)
+
+msn.test2 <- poppr.msn(gl.tharp, dist.test, wscale = TRUE, vertex.label=NA, showplot = TRUE, include.ties = T)
+msn.test3 <- poppr.msn(gl.fug, dist.test2, wscale = TRUE, vertex.label=NA, showplot = TRUE, include.ties = T)
+msn.test4 <- poppr.msn(gl.long, dist.test3, wscale = TRUE, vertex.label=NA, showplot = TRUE, include.ties = T)
+```
+
+```{r}
+library(rcartocolor)
+library(viridis)
+
+plot_poppr_msn(gl.tharp, msn.test2, gscale = TRUE, gadj = 70, gweight = 1, layfun =  layout_nicely,  quantiles = FALSE, scale.leg = TRUE, size.leg = FALSE, pop.leg = TRUE, wscale = TRUE,  inds = "none", nodescale = 20, palette = palette.colors(n = nPop(gl.tharp)))
+
+plot_poppr_msn(gl.fug, msn.test3, gadj = 70, layfun =  layout_nicely, gweight = 1,  quantiles = FALSE, scale.leg = TRUE, size.leg = FALSE, wscale = TRUE,  inds = "none", nodescale = 20, palette = palette.colors(n = nPop(gl.fug)))
+
+plot_poppr_msn(gl.long, msn.test4, gadj = 70, layfun =  layout_with_fr, gweight = 2,  quantiles = FALSE, scale.leg = FALSE, wscale = FALSE,  inds = "none", nodescale = 50, palette = palette.colors(n = nPop(gl.long)))
+
+dev.off()
+```
+
+
+
+
+
+
+
+
