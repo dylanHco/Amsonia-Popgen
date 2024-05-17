@@ -1,1 +1,2 @@
-
+# NOTE - The fastq files in the NCBI database have already been demultiplexed and so process radtags does not need to be run. Because we used indexes for our library I was unable to upload the raw multiplexed files to NCBI
+# This script with cover the denvo assembly and populations analyses.
